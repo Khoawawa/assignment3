@@ -1,0 +1,9 @@
+
+                func a() boolean {return true;}
+                func main(){
+                    var a int
+                    for a() {
+                        a = 1
+                    }
+                }
+                

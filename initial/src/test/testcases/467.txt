@@ -1,0 +1,1 @@
+var a float; func main(){if (a) {a=1;};};

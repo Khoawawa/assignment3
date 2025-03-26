@@ -1,0 +1,1 @@
+type A struct {a int;}; func main(){var arr[2]A;};

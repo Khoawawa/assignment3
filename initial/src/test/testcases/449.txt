@@ -1,0 +1,8 @@
+
+                func doSomething() {
+                    return;
+                }
+                func main() {
+                    var x int = 1 + doSomething();
+                }
+                

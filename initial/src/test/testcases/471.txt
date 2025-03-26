@@ -1,0 +1,6 @@
+
+                type I interface{
+                    foo(x int) int
+                    foo(y int) int
+                }
+                

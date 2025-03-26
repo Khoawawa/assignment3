@@ -1,0 +1,8 @@
+
+                func a() {
+                    return;
+                }
+                func main(){
+                    var a int = a()
+                }
+                

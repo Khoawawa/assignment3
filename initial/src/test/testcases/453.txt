@@ -1,0 +1,8 @@
+
+                func factorial(n int) bool {
+                    return n * factorial(n - 1);
+                }
+                func main() {
+                    var result int = factorial(5);
+                }
+                

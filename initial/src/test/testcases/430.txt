@@ -1,0 +1,13 @@
+
+             type I interface{Add(x int,y int);}
+             type S struct{
+                sum int;
+             }
+             func (s S) Add(x int,y int){
+                s.sum = x + y;
+             }
+             func main(){
+                var i I;
+                i = S{sum:0}; 
+             }
+             

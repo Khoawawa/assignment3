@@ -1,0 +1,4 @@
+var a float;
+             func main(){
+                    a = 1 + 2;
+                 };

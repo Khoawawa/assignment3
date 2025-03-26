@@ -1,0 +1,6 @@
+
+            func main(){
+                var a int;
+                a = -10 + 5 * 3 / 2    
+            }
+            

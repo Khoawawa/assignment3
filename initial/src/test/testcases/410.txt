@@ -1,0 +1,1 @@
+type A struct {a int;}; func test(a A, b A, c A, d A){var arr = [2][2]A{{a,b},{c,d}};};func main(){var arr[2]A;};

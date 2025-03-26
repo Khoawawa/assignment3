@@ -1,0 +1,16 @@
+
+                type I interface {
+    foo(x int) int;
+};
+
+type S struct {i int; };
+
+func (a S) foo(x int) string { // Mismatch: expected foo(int) int but got foo(int) string
+    return "hello";
+}
+
+func main() {
+    var a S;
+    var i I = a;  // Type Mismatch: A does not correctly implement I
+}
+                

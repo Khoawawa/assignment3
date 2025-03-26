@@ -1,0 +1,8 @@
+
+                func a(x int, y int) int{
+                    return x + y
+                }
+                func main(){
+                    a(3)
+                }
+                

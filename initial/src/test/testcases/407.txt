@@ -1,0 +1,1 @@
+var a[5]int; func main(){a[1] = 2;};
