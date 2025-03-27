@@ -1,0 +1,5 @@
+type A struct { arr int; }; 
+func main() {
+    var a A;
+    a.arr = 100;
+}

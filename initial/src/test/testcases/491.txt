@@ -1,1 +1,1 @@
-func b(){b();};func c(){d();};
+type A struct {a int;};func main(){ var arr [2]int = A{a:10};};

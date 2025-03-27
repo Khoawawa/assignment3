@@ -1,1 +1,1 @@
-type a struct {a int;};var a int;
+var a int = [5]int{1,2,3,4};

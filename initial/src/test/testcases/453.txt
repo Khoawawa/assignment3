@@ -1,8 +1,16 @@
 
-                func factorial(n int) bool {
-                    return n * factorial(n - 1);
+                type S struct {
+                    arr [5]int
+                }
+
+                func a(b S) [5]int {
+                    return b.arr
                 }
                 func main() {
-                    var result int = factorial(5);
+                    var s = S{arr: [5]int{1, 2, 3, 4, 5}}
+                    for idx, val := range a(s) {
+                        var c = a(s)
+                    }
                 }
+
                 

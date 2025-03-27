@@ -1,1 +1,14 @@
-type A struct {a int;}; type B struct {arr [2]A;}; func main(){var x = B{arr:[2]A{A{a:1}, A{a:2}}};};
+
+                type I interface {
+                    foo(x int) int
+                }
+                type S struct{
+                    i int
+                }
+                func (s S) foo(x string) int{
+                    return s.i
+                }
+                func main(){
+                    var i I = S{i:1}
+                }
+                

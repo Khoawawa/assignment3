@@ -1,1 +1,1 @@
-Undeclared Function: b
+Type Mismatch: VarDecl(arr,ArrayType(IntType,[IntLiteral(2)]),StructLiteral(A,[(a,IntLiteral(10))]))

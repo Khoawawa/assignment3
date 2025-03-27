@@ -1,8 +1,8 @@
 
-                func a() int{
-                    return 1
-                }
-                func main(){
-                    a();
+                func main() {
+                    var i int = 0
+                    for i < 10 && i%2 == 0 {
+                        i += 2
+                    }
                 }
                 

@@ -1,1 +1,1 @@
-func a(){b();};func b(){b();};func c(){b();};
+type A struct {arr [5] int;}; func main(){var a A = A{arr: [3]int {1,2,3}};};

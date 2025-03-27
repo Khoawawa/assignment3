@@ -1,12 +1,1 @@
-
-                type S struct{
-                    i int;
-                }
-                func (s S) foo(x int) int{
-                    return x + s.foo(x);
-                }
-                func main(){
-                    var s S;
-                    var a int = s.foo(10,20);
-                }
-                
+func main(){var a int; var a int;};
