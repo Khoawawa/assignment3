@@ -67,9 +67,34 @@ class StaticChecker(BaseVisitor,Utils):
             'context': False,
             'lhs': False,
             'func': None,
-            'receiver': None
+            'receiver': None,
+            'pass': 0
         }
-        program_c = reduce(lambda acc,cur: self.visit(cur,acc),ast.decl,c)
+        # Step 1: first pass check --> Collect struct and interface --> dont touch field
+        global_c = reduce(
+            lambda acc,cur: self.visit(cur,acc),
+            filter(lambda x: isinstance(x,(StructType,InterfaceType)),ast.decl),
+            {**c,'pass': 1}
+                            )
+        # Step 2: second pass check --> check struct field and interface prototype
+        global_c = reduce(
+            lambda acc,cur: self.visit(cur,acc),
+            filter(lambda x: isinstance(x,(StructType,InterfaceType)),ast.decl),
+            {**global_c,'pass': 2}
+                            )
+        #Step 3: third pass check --> check function and struct methods --> dont touch body
+        program_c = reduce(
+            lambda acc,cur: self.visit(cur,acc),
+            filter(lambda x: isinstance(x,(FuncDecl,MethodDecl)),ast.decl),
+            {**program_c,'pass': 3}
+                            )
+        #Step 4: fourth pass check --> check var,const decl and function/method body
+        program_c = reduce(
+            lambda acc,cur: self.visit(cur,acc),
+            filter(lambda x: not isinstance(x,(StructType,InterfaceType)),ast.decl),
+            {**program_c,'pass': 4}
+                            )
+        #Step 5: check main function existence
         res = self.lookup("main",program_c['env'][-1],lambda x: x.name)
         if not res:
             raise Undeclared(Function(), "main")
@@ -124,6 +149,48 @@ class StaticChecker(BaseVisitor,Utils):
     def visitFuncDecl(self,ast, c):
         env = c['env']
         
+        if c['pass'] == 3:
+            #only return Symbol(name,(partype,rettype)) --> dont touch body
+            #check if function has already been declared
+            if c['receiver']:
+                struct_type = c['receiver'].mtype 
+                
+                if self.lookup(ast.name,struct_type.methods,lambda x: x.name):
+                    raise Redeclared(Method(), ast.name)
+                
+                par_scope = []
+            else:
+                res = self.lookup(ast.name,env[0],lambda x: x.name)
+                if res:
+                    raise Redeclared(Function(), ast.name)
+            
+            par_scope = []
+            
+            par_c = reduce(
+                lambda acc,cur: self.visit(cur,acc),
+                ast.params,
+                {**c,'env': [par_scope] + c}
+            )
+            # incase of method decl
+            if c['receiver']:
+                struct_type = c['receiver'].mtype 
+                
+                if self.lookup(ast.name,struct_type.methods,lambda x: x.name):
+                    raise Redeclared(Method(), ast.name)
+                
+                func_symbol = Symbol(ast.name,MType(par_c['env'][0][1:],rettype))
+                
+                struct_type.methods.append(meth_symbol)
+                return c
+            else:
+                func_symbol = Symbol(ast.name,MType(par_c['env'][0],rettype))
+            
+            rettype = self.visit(ast.retType,c)
+            
+            func_symbol = Symbol(ast.name,MType(par_c['env'][0],rettype))
+            return 
+            
+            
         res = self.lookup(ast.name,env[0],lambda x: x.name)
         if not res is None:
             raise Redeclared(Function(), ast.name)
@@ -211,37 +278,40 @@ class StaticChecker(BaseVisitor,Utils):
     
     def visitStructType(self,ast,c):
         env = c['env']
-        if self.lookup(ast.name,env[0],lambda x: x.name):
-            raise Redeclared(StaticError.Type(), ast.name)
-        # redeclare field check
-        struct_env = self._checkField(ast.elements,c)
-        struct_type = StructType(
-                ast.name,
-                struct_env,
-                []
-            )
-        # type is global
-        return {**c,'env':[env[0] + [struct_type]] + env[1:]}
+        
+        if c['pass'] == 1:
+            # check if struct is redeclared
+            if self.lookup(ast.name,env[0],lambda x: x.name):
+                raise Redeclared(StaticError.Type(), ast.name)
+            # return the whole struct
+            return {**c,'env': [env[-1] + [ast]]} # --> global so no 1:
+        # find the struct
+        res = self.lookup(ast.name,env[0],lambda x: x.name)
+        # check fields
+        res.elements = self._checkField(res.elements,c)
+        
+        return c
     
     def visitInterfaceType(self,ast,c):
         env = c['env']
         
-        if self.lookup(ast.name,env[0],lambda x: x.name):
-            raise Redeclared(StaticError.Type(), ast.name)
-        #check prototype
-        # return --> list of method
-        methods_type = reduce(
+        if c['pass'] == 1:
+            if self.lookup(ast.name,env[0],lambda x: x.name):
+                raise Redeclared(StaticError.Type(), ast.name)
+            # return the whole interface
+            return {**c,'env': [env[-1] + [ast]]}
+        # find the interface
+        res = self.lookup(ast.name,env[0],lambda x: x.name)
+        #check prototypes
+        prototype_c = reduce(
             lambda acc,cur: self.visit(cur,acc),
             ast.methods,
             {**c,'env':[[]] + c['env']}
         )
-        prototypes = methods_type['env'][0]
-        interface_type = InterfaceType(
-            ast.name,
-            prototypes
-        )
         
-        return {**c,'env':[env[0] + [interface_type]] + env[1:]}
+        res.methods = prototype_c['env'][0]
+        
+        return c
     
     def visitPrototype(self,ast,c):
         #prototype redeclare
@@ -256,7 +326,7 @@ class StaticChecker(BaseVisitor,Utils):
         
         prototype = Symbol(ast.name,MType(param_type,rettype))
         
-        return {**c, 'env': [env[0] + [prototype]] + env[1:] }
+        return {**c, 'env': [env[0] + [prototype]] + env[1:]}
         
     def visitAssign(self,ast,c):
         lhs_type = self.visit(ast.lhs,{**c, 'lhs': True})
