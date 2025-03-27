@@ -1,1 +1,1 @@
-Type Mismatch: ArrayLiteral([IntLiteral(3)],IntType,[IntLiteral(1),StringLiteral("Hello")])
+Redeclared Parameter: a

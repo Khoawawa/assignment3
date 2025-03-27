@@ -1,1 +1,1 @@
-var a [5]int = 10;
+func main(){x:= 1;};

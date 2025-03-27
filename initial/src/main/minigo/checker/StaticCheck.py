@@ -70,7 +70,7 @@ class StaticChecker(BaseVisitor,Utils):
             'receiver': None,
             'pass': 0
         }
-        # Step 1: first pass check --> Collect struct and interface --> dont touch field
+        # Step 1: first pass check --> Collect name --> dont touch anything else
         global_c = reduce(
             lambda acc,cur: self.visit(cur,acc),
             filter(lambda x: isinstance(x,(StructType,InterfaceType)),ast.decl),
@@ -86,7 +86,7 @@ class StaticChecker(BaseVisitor,Utils):
         program_c = reduce(
             lambda acc,cur: self.visit(cur,acc),
             filter(lambda x: isinstance(x,(FuncDecl,MethodDecl)),ast.decl),
-            {**program_c,'pass': 3}
+            {**global_c,'pass': 3}
                             )
         #Step 4: fourth pass check --> check var,const decl and function/method body
         program_c = reduce(
@@ -158,66 +158,42 @@ class StaticChecker(BaseVisitor,Utils):
                 if self.lookup(ast.name,struct_type.methods,lambda x: x.name):
                     raise Redeclared(Method(), ast.name)
                 
-                par_scope = []
+                par_scope = [c['receiver']]
             else:
                 res = self.lookup(ast.name,env[0],lambda x: x.name)
                 if res:
                     raise Redeclared(Function(), ast.name)
-            
-            par_scope = []
+                
+                par_scope = []
             
             par_c = reduce(
                 lambda acc,cur: self.visit(cur,acc),
                 ast.params,
-                {**c,'env': [par_scope] + c}
+                {**c,'env': [par_scope] + c['env']}
             )
-            # incase of method decl
-            if c['receiver']:
-                struct_type = c['receiver'].mtype 
-                
-                if self.lookup(ast.name,struct_type.methods,lambda x: x.name):
-                    raise Redeclared(Method(), ast.name)
-                
-                func_symbol = Symbol(ast.name,MType(par_c['env'][0][1:],rettype))
-                
-                struct_type.methods.append(meth_symbol)
-                return c
-            else:
-                func_symbol = Symbol(ast.name,MType(par_c['env'][0],rettype))
-            
+            partypes = par_c['env'][0]
+            # check return type
             rettype = self.visit(ast.retType,c)
             
-            func_symbol = Symbol(ast.name,MType(par_c['env'][0],rettype))
-            return 
+            func_symbol = Symbol(ast.name,MType(partypes,rettype))
             
-            
-        res = self.lookup(ast.name,env[0],lambda x: x.name)
-        if not res is None:
-            raise Redeclared(Function(), ast.name)
-        
-        par_scope = [c['receiver']] if c['receiver'] else []
-        
-        par_c = reduce(lambda acc,cur: self.visit(cur,acc),ast.params,{**c,'env':[par_scope] + c['env']}) # have it own scope
+            if c['receiver']:
+                struct_type.methods.append(func_symbol)
 
-        rettype = self.visit(ast.retType,c)
+                return c
+            
+            else:
+                return {**c,'env': [env[0] + [func_symbol]]}
+        #pass 4
+        func_res = self.lookup(ast.name,env[0],lambda x: x.name)
+        param_list = func_res.mtype.partype
+        # visit body block
+        self.visit(ast.body,{**c,'env':[func_res.mtype.partype] + c['env'],'func':func_res})
         
-        func_symbol = Symbol(ast.name, MType(par_c['env'][0],rettype))
         if c['receiver']:
-            struct_type = c['receiver'].mtype
+            func_res.mtype.partype = param_list[1:] if param_list else []
             
-            if self.lookup(ast.name,struct_type.methods,lambda x: x.name):
-                raise Redeclared(Method(), ast.name)
-            
-            meth_symbol = Symbol(ast.name,MType(par_c['env'][0][1:],rettype))
-            
-            struct_type.methods.append(meth_symbol)
-            
-        # par_type = [[param_scope][global_scope]]
-        body_env = [par_c['env'][0]] + [par_c['env'][1] + [func_symbol]] + par_c['env'][2:]
-
-        self.visit(ast.body,{**c,'env':body_env,'func':func_symbol})
-        
-        return {**c, 'env': [env[0] + [func_symbol]] + env[1:]}
+        return c
     
     def visitParamDecl(self,ast,c):
         env = c['env']
@@ -228,17 +204,22 @@ class StaticChecker(BaseVisitor,Utils):
         return {**c,'env': [env[0] + [Symbol(ast.parName,partype,None)]] + env[1:]}
     
     def visitMethodDecl(self,ast,c):
-        env = c['env']
-        struct_type = self.visit(ast.recType,c)
-        if not struct_type:
-            raise Undeclared(StaticError.Type(),ast.recType)
-        # is struct_type a struct?
-        if not isinstance(struct_type,StructType):
-            raise TypeMismatch(ast)
-        
-        struct_methods = struct_type.methods
-        # cant do c because only for scope of method
-        fun_env = self.visit(ast.fun,{**c,'env': [[]] + c['env'],'receiver': Symbol(ast.receiver,struct_type,None)})
+        if c['pass'] == 3:
+            #Check for struct existence
+            struct_type = self.visit(ast.recType,c)
+            if not struct_type:
+                raise Undeclared(Type(),ast.recType)
+            # is struct_type a struct?
+            if not isinstance(struct_type,StructType):
+                raise TypeMismatch(ast)
+        # visit funcdecl
+        self.visit(
+            ast.fun,
+            {
+                **c,
+                'receiver': Symbol(ast.receiver,struct_type,None)
+            }
+        )
         
         return c
     ## VISIT TYPE ##

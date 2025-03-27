@@ -1,1 +1,1 @@
-func main(){var a = [1]int{1};};
+func a(){return;};var a int;
