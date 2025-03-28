@@ -1,1 +1,8 @@
-func main(){if (true){if (true) {a=1;} else {b=2;};} else {c=3;};};
+
+                func a() {
+                    return;
+                }
+                func main(){
+                    var a int = a()
+                }
+                

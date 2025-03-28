@@ -1,1 +1,1 @@
-func b(){b();};func c(){d();};
+type A struct {a int;}; type B struct {arr [2]A;}; func main(){var x = B{arr:[2]A{A{a:1}, A{a:2}}};};

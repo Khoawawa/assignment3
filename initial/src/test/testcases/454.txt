@@ -1,1 +1,8 @@
-func main(){if (true) {a=1;};};
+
+                func a(){
+                    return;   
+                }
+                func main(){
+                    a();
+                }
+                

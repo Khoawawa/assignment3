@@ -1,8 +1,7 @@
 
-                func add(x int, y int) int {
-                    return x + y;
-                }
                 func main() {
-                    var z int = add(3, 5);
+                    for i := 0; i < 10; i += "1" {
+                        a := 1
+                    }
                 }
                 

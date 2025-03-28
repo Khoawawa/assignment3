@@ -1,1 +1,1 @@
-Redeclared Parameter: a
+Type Mismatch: If(Id(a),Block([Assign(Id(a),IntLiteral(1))]))

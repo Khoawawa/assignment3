@@ -1,6 +1,1 @@
-
-                type I interface{
-                    foo(x int) int
-                    foo(y int) int
-                }
-                
+func main(){if (1.2) {a=1;};};

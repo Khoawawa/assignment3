@@ -1,1 +1,1 @@
-Type Mismatch: VarDecl(i,Id(I),StructLiteral(S,[(i,IntLiteral(1))]))
+Type Mismatch: If(IntLiteral(1),Block([Assign(Id(a),IntLiteral(1))]))

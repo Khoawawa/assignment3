@@ -1,1 +1,1 @@
-Type Mismatch: FuncCall(a,[])
+Type Mismatch: For(Id(i),Block([Assign(Id(a),IntLiteral(1))]))

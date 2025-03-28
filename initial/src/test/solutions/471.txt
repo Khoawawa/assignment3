@@ -1,1 +1,1 @@
-Redeclared Prototype: foo
+Type Mismatch: If(FloatLiteral(1.2),Block([Assign(Id(a),IntLiteral(1))]))
