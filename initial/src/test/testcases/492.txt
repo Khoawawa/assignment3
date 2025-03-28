@@ -1,5 +1,1 @@
-type A struct { arr [5]int; }; 
-func main() {
-    var a = A{};
-    a.arr = 100;
-}
+type A struct {a int;}; var arr [2]int = A{a:10};

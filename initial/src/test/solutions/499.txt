@@ -1,1 +1,1 @@
-Undeclared Function: main
+Type Mismatch: MethodCall(Id(s),foo,[IntLiteral(10)])

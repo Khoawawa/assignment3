@@ -1,1 +1,1 @@
-func a(a int,a int){return;};
+var a int;type a struct {a int;};

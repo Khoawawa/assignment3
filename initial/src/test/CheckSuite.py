@@ -539,12 +539,66 @@ func main() {
                         var c = a(s)
                     }
                 }
-
+                """,
+                ""
+            ),
+        ]
+        CheckSuite.num = load_tcs(self, tcs, CheckSuite.num)
+    def test_method(self):
+        tcs = [
+            (
+                """
+                func (s S) foo(x int) int{
+                    return x
+                }
+                type S struct {
+                    a int
+                }
+                func main(){
+                    var s S
+                    var a int = s.foo(1)
+                }
+                """,
+                ""
+            ),
+            (
+                """
+                func (s S) foo(x int) int{
+                    return x
+                }
+                func (s S) foo(x int) int{
+                    return x
+                }
+                type S struct {
+                    a int
+                }
+                func main(){
+                    var s S
+                    var a int = s.foo(1)
+                }
+                """,
+                "Redeclared Method: foo\n"
+            ),
+            (
+                """
+                func foo() int {
+                    return 1
+                }
+                func (s S) foo(x int) int{
+                    return x
+                }
+                type S struct {
+                    a int
+                }
+                func main(){
+                    var s S
+                }
                 """,
                 ""
             )
         ]
         CheckSuite.num = load_tcs(self, tcs, CheckSuite.num)
+        
     def test_global(self):
         tcs = [
             
