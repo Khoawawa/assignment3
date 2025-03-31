@@ -599,11 +599,6 @@ func main() {
         ]
         CheckSuite.num = load_tcs(self, tcs, CheckSuite.num)
         
-    def test_global(self):
-        tcs = [
-            
-        ]
-        CheckSuite.num = load_tcs(self, tcs, CheckSuite.num)
 def load_tcs(suite: CheckSuite, tcs, start_num):
     for tc in tcs:
         # print(start_num)

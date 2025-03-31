@@ -1,0 +1,7 @@
+
+                func a() int{
+                    return 1
+                }
+                const b = 0
+                const c =  a() + 1
+                
