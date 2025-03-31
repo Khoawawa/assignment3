@@ -598,7 +598,11 @@ func main() {
             )
         ]
         CheckSuite.num = load_tcs(self, tcs, CheckSuite.num)
-        
+    def test_pg(self):
+        tcs = [
+            ("""var b = [5] int{1,2,3,4};const a = 1 * 2 + 1 + 2 + 3 /4;""","")
+        ]
+        load_tcs(self,tcs,600)
 def load_tcs(suite: CheckSuite, tcs, start_num):
     for tc in tcs:
         # print(start_num)

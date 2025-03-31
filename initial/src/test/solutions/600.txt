@@ -1,1 +1,1 @@
-Type Mismatch: ConstDecl(c,BinaryOp(FuncCall(a,[]),+,IntLiteral(1)))
+Undeclared Function: main
