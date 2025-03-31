@@ -1,1 +1,1 @@
-var a float; func main(){if (a) {a=1;};};
+func a(a int,a int){return;};

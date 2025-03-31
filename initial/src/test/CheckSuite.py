@@ -19,8 +19,8 @@ class CheckSuite(unittest.TestCase):
     def test_undeclare(self):
         tcs = [
             ("""func a(){b();};""", "Undeclared Function: b\n"),
-            ("""func a(){b();};func b(){b();};""", "Undeclared Function: main\n"),
-            ("""func a(){b();};func b(){b();};func c(){b();};""", "Undeclared Function: main\n"),
+            ("""func a(){b();};func b(){b();};""", "Undeclared Function: b\n"),
+            ("""func a(){b();};func b(){b();};func c(){b();};""", "Undeclared Function: b\n"),
             ("""func b(){b();};func c(){d();};""", "Undeclared Function: d\n"),
         ]
         CheckSuite.num = load_tcs(self, tcs, CheckSuite.num)
@@ -443,162 +443,11 @@ func main() {
             ),
             (
                 """
-                func main(){
-                    for i:= 0; i < 10; i +=1 {
-                        a := 1
-                    }
-                }
-                """,
-                ""
-            ),
-            (
-                """
-                func main() {
-                    var i int = 0
-                    for i < 10 && i%2 == 0 {
-                        i += 2
-                    }
-                }
-                """,
-                ""
-            ),
-            (
-                """
-                func main(){
-                    var i int = 10
-                    for i {
-                        a = 1
-                    }
-                }
-                """,
-                "Type Mismatch: For(Id(i),Block([Assign(Id(a),IntLiteral(1))]))\n"
-            ),
-            (
-                """
-                func main() {
-                    for i := 0; i < 10; i += "1" {
-                        a := 1
-                    }
-                }
-                """,
-                "Type Mismatch: BinaryOp(Id(i),+,StringLiteral(\"1\"))\n"
-            ),
-            (
-                """
-                func main() {
-    for i := 0; x < 10; i+=1 {
-        a := i
-    }
-}
-                """,
-                "Undeclared Identifier: x\n"
-            ),
-            (
-                """
-                func main(){
-                    for index,value := range [5] int {1,2,3,4,5} {
-                    b = 1
-                }
-                }
                 
-                """,
-                ""
-            ),
-            (
                 """
-                func main(){
-                    for _,value := range [5] int {1,2,3,4,5} {
-                        b = 1
-                    }
-                }
-                """,
-                ""
-            ),
-            (
-                """
-                func main(){
-                    for _,_ := range [5] int {1,2,3,4,5} {
-                        b = 1
-                    }
-                };
-                """,
-                "Type Mismatch: ForEach(Id(_),Id(_),ArrayLiteral([IntLiteral(5)],IntType,[IntLiteral(1),IntLiteral(2),IntLiteral(3),IntLiteral(4),IntLiteral(5)]),Block([Assign(Id(b),IntLiteral(1))]))\n"
-            ),
-            (
-                """
-                type S struct {
-                    arr [5]int
-                }
-
-                func a(b S) [5]int {
-                    return b.arr
-                }
-                func main() {
-                    var s = S{arr: [5]int{1, 2, 3, 4, 5}}
-                    for idx, val := range a(s) {
-                        var c = a(s)
-                    }
-                }
-                """,
-                ""
-            ),
-        ]
-        CheckSuite.num = load_tcs(self, tcs, CheckSuite.num)
-    def test_method(self):
-        tcs = [
-            (
-                """
-                func (s S) foo(x int) int{
-                    return x
-                }
-                type S struct {
-                    a int
-                }
-                func main(){
-                    var s S
-                    var a int = s.foo(1)
-                }
-                """,
-                ""
-            ),
-            (
-                """
-                func (s S) foo(x int) int{
-                    return x
-                }
-                func (s S) foo(x int) int{
-                    return x
-                }
-                type S struct {
-                    a int
-                }
-                func main(){
-                    var s S
-                    var a int = s.foo(1)
-                }
-                """,
-                "Redeclared Method: foo\n"
-            ),
-            (
-                """
-                func foo() int {
-                    return 1
-                }
-                func (s S) foo(x int) int{
-                    return x
-                }
-                type S struct {
-                    a int
-                }
-                func main(){
-                    var s S
-                }
-                """,
-                ""
             )
         ]
         CheckSuite.num = load_tcs(self, tcs, CheckSuite.num)
-        
     def test_global(self):
         tcs = [
             

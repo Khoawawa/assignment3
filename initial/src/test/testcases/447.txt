@@ -1,8 +1,8 @@
 
+                func a() {
+                    return;
+                }
                 func main(){
-                    var i int = 10
-                    for i {
-                        a = 1
-                    }
+                    var a int = a()
                 }
                 

@@ -67,34 +67,9 @@ class StaticChecker(BaseVisitor,Utils):
             'context': False,
             'lhs': False,
             'func': None,
-            'receiver': None,
-            'pass': 0
+            'receiver': None
         }
-        # Step 0: collect name except for method decl
-        global_c = reduce(
-            lambda acc,cur: self.visit(cur,acc),
-            filter(lambda x: not isinstance(x,(MethodDecl)),ast.decl),
-            {**c,'pass': 0}
-                        )
-        # Step 1: check type field, interface prototype
-        global_c = reduce(
-            lambda acc,cur: self.visit(cur,acc),
-            filter(lambda x: isinstance(x,(StructType,InterfaceType)),ast.decl),
-            {**global_c,'pass': 1}
-                        )
-        # Step 2: check func/method param,return, add method to corresponding struct
-        global_c = reduce(
-            lambda acc,cur: self.visit(cur,acc),
-            filter(lambda x: isinstance(x,(MethodDecl,FuncDecl)),ast.decl),
-            {**global_c,'pass': 2}
-                            )
-        #Step 3: check var, const, function/method body
-        program_c = reduce(
-            lambda acc,cur: self.visit(cur,acc),
-            filter(lambda x: not isinstance(x,(StructType,InterfaceType)),ast.decl),
-            {**global_c,'pass': 3}
-                            )
-        #Step 4: check main function existence
+        program_c = reduce(lambda acc,cur: self.visit(cur,acc),ast.decl,c)
         res = self.lookup("main",program_c['env'][-1],lambda x: x.name)
         if not res:
             raise Undeclared(Function(), "main")
@@ -112,17 +87,10 @@ class StaticChecker(BaseVisitor,Utils):
     def visitVarDecl(self, ast, c):
         env = c['env']
         
-        if c['pass'] == 0:
-            if self.lookup(ast.varName,env[0],lambda x: x.name):
-                raise Redeclared(Variable(), ast.varName)
-            
-            return {**c,'env': [env[0] + [Symbol(ast.varName,None,None)]]}
-        # pass = 3
-        var_res = self.lookup(ast.varName,env[0],lambda x:x.name)
-        # not global scope --> define in block --> check redeclare
-        if len(env) != 1 and var_res:
-            raise Redeclared(Variable(),ast.varName)
-            
+        res = self.lookup(ast.varName,env[0],lambda x: x.name)
+        if not res is None:
+            raise Redeclared(Variable(), ast.varName)
+        
         varType = self.visit(ast.varType,c) if ast.varType else None
         
         if ast.varInit:
@@ -133,98 +101,56 @@ class StaticChecker(BaseVisitor,Utils):
                 
             if not type(varType) is type(initType):
                 raise TypeMismatch(ast)
-        
-        if len(env) != 1:
-            varSymbol = Symbol(ast.varName,varType,None)
-            # ensure change doesnt affect the original c
-            return {**c,'env': [env[0]+[varSymbol]] + env[1:]}
-        
-        var_res.mtype = varType
-        
-        return c
+            
+        varSymbol = Symbol(ast.varName,varType,None)
+        # ensure change doesnt affect the original c
+        return {**c,'env': [env[0]+[varSymbol]] + env[1:]}
     
     def visitConstDecl(self,ast,c):
         env = c['env']
-        if c['pass'] == 0:
-            res = self.lookup(ast.varName,env[0],lambda x: x.name)
-            if res:
-                raise Redeclared(Constant(), ast.varName)
-            return {**c,'env': [env[0] + [Symbol(ast.varName,None,None)]]}
-        # pass = 3
-        var_res = self.lookup(ast.varName,env[0],lambda x:x.name)
-        # not global scope --> define in block --> check redeclare
-        if len(env) != 1 and var_res:
-            raise Redeclared(Constant(),ast.varName)
         
-        conType = self.visit(ast.conType,c) if ast.conType else None
+        res = self.lookup(ast.varName,env[0],lambda x: x.name)
+        if not res is None:
+            raise Redeclared(Constant(), ast.conName)
         
         if ast.iniExpr:
             initType = self.visit(ast.iniExpr,{**c, 'context':True})
-            conType = initType
-        
-        if len(env) != 1:
-            constSymbol = Symbol(ast.varName,conType,None)
+            ast.conType = initType
             
-            return {**c,'env': [env[0] + [constSymbol]] + env[1:]}
+        constSymbol = Symbol(ast.varName,ast.varType,None)
         
-        var_res.mtype = conType
-        
-        return c
+        return {**c,'env': [env[0] + [constSymbol]] + env[1:]}
 
     def visitFuncDecl(self,ast, c):
         env = c['env']
-        if c['pass'] == 0:
-            # can only be funcDecl
-            if self.lookup(ast.name,env[0], lambda x: x.name):
-                raise Redeclared(Function(), ast.name)
-            return {**c,'env':[env[0] + [Symbol(ast.name,MType(ast.params,ast.retType))]]}
         
-        if c['pass'] == 2:
-            #only modify on exisiting --> dont touch body
-            #check if function has already been declared
-            if c['receiver']:
-                struct_type = c['receiver'].mtype 
-                
-                if self.lookup(ast.name,struct_type.elements + struct_type.methods,lambda x: x.name):
-                    raise Redeclared(Method(), ast.name)
-                
-                par_scope = [c['receiver']]
-            else:
-                res = self.lookup(ast.name,env[0],lambda x: x.name)
-                
-                par_scope = []
-            
-            par_c = reduce(
-                lambda acc,cur: self.visit(cur,acc),
-                ast.params,
-                {**c,'env': [par_scope] + c['env']}
-            )
-            partypes = par_c['env'][0]
-            # check return type
-            rettype = self.visit(ast.retType,c)
-            
-            if c['receiver']:
-                func_symbol = Symbol(ast.name,MType(partypes,rettype))
-                
-                struct_type.methods.append(func_symbol)
-            
-            else:
-                res.mtype.partype = partypes
-                res.mtype.rettype = rettype
-                
-            return c
-        #pass 3
+        res = self.lookup(ast.name,env[0],lambda x: x.name)
+        if not res is None:
+            raise Redeclared(Function(), ast.name)
+        
+        par_scope = [c['receiver']] if c['receiver'] else []
+        
+        par_c = reduce(lambda acc,cur: self.visit(cur,acc),ast.params,{**c,'env':[par_scope] + c['env']}) # have it own scope
+
+        rettype = self.visit(ast.retType,c)
+        
+        func_symbol = Symbol(ast.name, MType(par_c['env'][0],rettype))
         if c['receiver']:
-            methods = c['receiver'].mtype.methods
-            func_res = self.lookup(ast.name,methods,lambda x: x.name)
-        else:
-            func_res = self.lookup(ast.name,env[0],lambda x: x.name)
+            struct_type = c['receiver'].mtype
             
-        param_list = func_res.mtype.partype
-        # visit body block
-        self.visit(ast.body,{**c,'env':[func_res.mtype.partype] + c['env'],'func':func_res})
+            if self.lookup(ast.name,struct_type.methods,lambda x: x.name):
+                raise Redeclared(Method(), ast.name)
             
-        return c
+            meth_symbol = Symbol(ast.name,MType(par_c['env'][0][1:],rettype))
+            
+            struct_type.methods.append(meth_symbol)
+            
+        # par_type = [[param_scope][global_scope]]
+        body_env = [par_c['env'][0]] + [par_c['env'][1] + [func_symbol]] + par_c['env'][2:]
+
+        self.visit(ast.body,{**c,'env':body_env,'func':func_symbol})
+        
+        return {**c, 'env': [env[0] + [func_symbol]] + env[1:]}
     
     def visitParamDecl(self,ast,c):
         env = c['env']
@@ -235,22 +161,17 @@ class StaticChecker(BaseVisitor,Utils):
         return {**c,'env': [env[0] + [Symbol(ast.parName,partype,None)]] + env[1:]}
     
     def visitMethodDecl(self,ast,c):
+        env = c['env']
         struct_type = self.visit(ast.recType,c)
-        if c['pass'] == 2:
-            #Check for struct existence
-            if not struct_type:
-                raise Undeclared(Type(),ast.recType)
-            # is struct_type a struct?
-            if not isinstance(struct_type,StructType):
-                raise TypeMismatch(ast)
-        # visit funcdecl
-        self.visit(
-            ast.fun,
-            {
-                **c,
-                'receiver': Symbol(ast.receiver,struct_type,None)
-            }
-        )
+        if not struct_type:
+            raise Undeclared(StaticError.Type(),ast.recType)
+        # is struct_type a struct?
+        if not isinstance(struct_type,StructType):
+            raise TypeMismatch(ast)
+        
+        struct_methods = struct_type.methods
+        # cant do c because only for scope of method
+        fun_env = self.visit(ast.fun,{**c,'env': [[]] + c['env'],'receiver': Symbol(ast.receiver,struct_type,None)})
         
         return c
     ## VISIT TYPE ##
@@ -290,40 +211,37 @@ class StaticChecker(BaseVisitor,Utils):
     
     def visitStructType(self,ast,c):
         env = c['env']
-        
-        if c['pass'] == 0:
-            # check if struct is redeclared
-            if self.lookup(ast.name,env[0],lambda x: x.name):
-                raise Redeclared(StaticError.Type(), ast.name)
-            # return the whole struct
-            return {**c,'env': [env[0] + [ast]]} # --> global so no 1:
-        # find the struct
-        res = self.lookup(ast.name,env[0],lambda x: x.name)
-        # check fields
-        res.elements = self._checkField(res.elements,c)
-        
-        return c
+        if self.lookup(ast.name,env[0],lambda x: x.name):
+            raise Redeclared(StaticError.Type(), ast.name)
+        # redeclare field check
+        struct_env = self._checkField(ast.elements,c)
+        struct_type = StructType(
+                ast.name,
+                struct_env,
+                []
+            )
+        # type is global
+        return {**c,'env':[env[0] + [struct_type]] + env[1:]}
     
     def visitInterfaceType(self,ast,c):
         env = c['env']
         
-        if c['pass'] == 0:
-            if self.lookup(ast.name,env[0],lambda x: x.name):
-                raise Redeclared(StaticError.Type(), ast.name)
-            # return the whole interface
-            return {**c,'env': [env[-1] + [ast]]}
-        # find the interface
-        res = self.lookup(ast.name,env[0],lambda x: x.name)
-        #check prototypes
-        prototype_c = reduce(
+        if self.lookup(ast.name,env[0],lambda x: x.name):
+            raise Redeclared(StaticError.Type(), ast.name)
+        #check prototype
+        # return --> list of method
+        methods_type = reduce(
             lambda acc,cur: self.visit(cur,acc),
             ast.methods,
             {**c,'env':[[]] + c['env']}
         )
+        prototypes = methods_type['env'][0]
+        interface_type = InterfaceType(
+            ast.name,
+            prototypes
+        )
         
-        res.methods = prototype_c['env'][0]
-        
-        return c
+        return {**c,'env':[env[0] + [interface_type]] + env[1:]}
     
     def visitPrototype(self,ast,c):
         #prototype redeclare
@@ -338,7 +256,7 @@ class StaticChecker(BaseVisitor,Utils):
         
         prototype = Symbol(ast.name,MType(param_type,rettype))
         
-        return {**c, 'env': [env[0] + [prototype]] + env[1:]}
+        return {**c, 'env': [env[0] + [prototype]] + env[1:] }
         
     def visitAssign(self,ast,c):
         lhs_type = self.visit(ast.lhs,{**c, 'lhs': True})
@@ -381,10 +299,10 @@ class StaticChecker(BaseVisitor,Utils):
                 proto_mtype = prototype.mtype
                 meth_mtype = method_res.mtype
                 # check if enough parameter    
-                if not len(meth_mtype.partype[1:]) == len(proto_mtype.partype):
+                if not len(meth_mtype.partype) == len(proto_mtype.partype):
                     raise TypeMismatch(ast)
                 # check if parameter is of correct type
-                if not all(map(lambda x: type(x[0].mtype) is type(x[1]),zip(meth_mtype.partype[1:],proto_mtype.partype))):
+                if not all(map(lambda x: type(x[0].mtype) is type(x[1]),zip(meth_mtype.partype,proto_mtype.partype))):
                     raise TypeMismatch(ast) 
                 # check return type
                 if not type(meth_mtype.rettype) is type(proto_mtype.rettype):
@@ -425,14 +343,17 @@ class StaticChecker(BaseVisitor,Utils):
         if not isinstance(ast.init,(VarDecl,Assign)):
             raise TypeMismatch(ast)
 
-        init_c = self.visit(ast.init,c) 
-
-        if not isinstance(self.visit(ast.cond,{**init_c,'context': True}),BoolType):
+        self.visit(ast.init,c) 
+        cond_c = {**c,'context': True}
+        
+        cond_type = self.visit(ast.cond,cond_c)
+        
+        if not isinstance(cond_type,BooleanType):
             raise TypeMismatch(ast)
         
-        upda_c = self.visit(ast.upda,init_c)
+        self.visit(ast.upda,c)
         
-        self.visit(ast.loop,upda_c) 
+        self.visit(ast.loop,c) 
         
         return c
     
@@ -443,26 +364,17 @@ class StaticChecker(BaseVisitor,Utils):
             'context': True
         }
         
-        if (ast.value.name == '_'):
-            raise TypeMismatch(ast)
-        
         arr_type = self.visit(ast.arr,arr_c) # dimens: List(IntType) eleType: Type
         if not isinstance(arr_type,ArrayType):
             raise TypeMismatch(ast)
-        
-        idx_type = [Symbol(ast.idx.name,IntType(),None)] if ast.idx.name != '_' else []
-        
-        val_type = [Symbol(ast.value.name,arr_type.eleType,None)]
-        
+        idx_type = Symbol(ast.idx.name,IntType(),None)
+        val_type = Symbol(ast.value.name,arr_type.eleType,None)
         loop_c = {
             **c,
-            'env': [idx_type + val_type] + c['env']
+            'env': [[idx_type] + [val_type]] + c['env']
         }
-        
         self.visit(ast.loop,loop_c)
-        
         return c
-    
     def visitBreak(self,ast,c):
         return c
     def visitContinue(self,ast,c):
@@ -552,10 +464,10 @@ class StaticChecker(BaseVisitor,Utils):
         
         args = list(map(lambda x: self.visit(x,context_c),ast.args))
         
-        if not len(method_type.partype[1:]) == len(ast.args):
+        if not len(method_type.partype) == len(ast.args):
             raise TypeMismatch(ast)
         
-        if not all(map(lambda x: type(x[1]) is type(x[0].mtype),zip(method_type.partype[1:],args))):
+        if not all(map(lambda x: type(x[1]) is type(x[0].mtype),zip(method_type.partype,args))):
             raise TypeMismatch(ast)
 
         if not c['context']:

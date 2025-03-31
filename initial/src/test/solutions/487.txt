@@ -1,1 +1,1 @@
-Redeclared Variable: a
+Type Mismatch: MethodCall(Id(s),foo,[IntLiteral(10)])

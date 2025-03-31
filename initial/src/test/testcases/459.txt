@@ -1,8 +1,1 @@
-
-                func a(x int, y int) int{
-                    return x + y
-                }
-                func main(){
-                    a(3)
-                }
-                
+func main(){if (1 > 0) {a=1;};};

@@ -1,8 +1,1 @@
-
-                func doSomething() {
-                    return;
-                }
-                func main() {
-                    var x int = 1 + doSomething();
-                }
-                
+func main(){a := true; if (a) {b=2;};};

@@ -1,6 +1,1 @@
-
-                type I interface{
-                    foo(x int) int
-                    foo(y int) int
-                }
-                
+type A struct {a int;}; var arr [2]int = A{a:10};

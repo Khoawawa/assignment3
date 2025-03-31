@@ -1,1 +1,1 @@
-var a int; func main(){if (a) {a=1;};};
+func a(){return;};var a int;

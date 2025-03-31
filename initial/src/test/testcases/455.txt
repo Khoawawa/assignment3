@@ -1,8 +1,1 @@
-
-                func a() int{
-                    return 1
-                }
-                func main(){
-                    a();
-                }
-                
+func main(){if (false) {a=1;} else {a=2;};};
