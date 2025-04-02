@@ -126,7 +126,7 @@ class StaticChecker(BaseVisitor,Utils):
         varType = self.visit(ast.varType,c) if ast.varType else None
         
         if ast.varInit:
-            initType = self.visit(ast.varInit, {**c, 'context':True})
+            initType,_ = self.visit(ast.varInit, {**c, 'context':True})
             
             if varType is None:
                 varType = initType
@@ -146,28 +146,31 @@ class StaticChecker(BaseVisitor,Utils):
     def visitConstDecl(self,ast,c):
         env = c['env']
         if c['pass'] == 0:
-            res = self.lookup(ast.varName,env[0],lambda x: x.name)
+            res = self.lookup(ast.conName,env[0],lambda x: x.name)
             if res:
-                raise Redeclared(Constant(), ast.varName)
-            return {**c,'env': [env[0] + [Symbol(ast.varName,None,None)]]}
+                raise Redeclared(Constant(), ast.conName)
+            return {**c,'env': [env[0] + [Symbol(ast.conName,None,None)]]}
         # pass = 3
-        var_res = self.lookup(ast.varName,env[0],lambda x:x.name)
+        var_res = self.lookup(ast.conName,env[0],lambda x:x.name)
         # not global scope --> define in block --> check redeclare
         if len(env) != 1 and var_res:
-            raise Redeclared(Constant(),ast.varName)
+            raise Redeclared(Constant(),ast.conName)
         
         conType = self.visit(ast.conType,c) if ast.conType else None
         
         if ast.iniExpr:
-            initType = self.visit(ast.iniExpr,{**c, 'context':True})
+            initType,con_val = self.visit(ast.iniExpr,{**c, 'context':True})
             conType = initType
+            if not con_val:
+                raise TypeMismatch(ast)
         
         if len(env) != 1:
-            constSymbol = Symbol(ast.varName,conType,None)
+            constSymbol = Symbol(ast.conName,conType,con_val)
             
             return {**c,'env': [env[0] + [constSymbol]] + env[1:]}
         
         var_res.mtype = conType
+        var_res.value = con_val
         
         return c
 
@@ -267,7 +270,7 @@ class StaticChecker(BaseVisitor,Utils):
 
     def visitArrayType(self,ast,c):
         dimens_c = {**c, 'context':True}
-        dimens = list(map(lambda x: self.visit(x,dimens_c),ast.dimens))
+        dimens = list(map(lambda x: self.visit(x,dimens_c)[0],ast.dimens))
         
         if not next(filter(lambda x: isinstance(x,IntType),dimens),None):
             raise TypeMismatch(ast)
@@ -345,14 +348,17 @@ class StaticChecker(BaseVisitor,Utils):
         if isinstance(lhs_type,VoidType):
             raise TypeMismatch(ast.lhs)
         
-        rhs_type = self.visit(ast.rhs,{**c,'context': True,'lhs': False})
+        rhs_type = self.visit(ast.rhs,{**c,'context': True,'lhs': False})[0]
         
         if isinstance(lhs_type,str):
             # it has not been declare yet --> add Symbol to env
             # but rhs cant contain the name --> autoresolve dont need to handle
             id_symbol = Symbol(lhs_type,rhs_type,None) 
             return {**c,'env': [c['env'][0] + [id_symbol]] + c['env'][1:]}
-            
+        
+        if isinstance(lhs_type,tuple):
+            lhs_type = lhs_type[0]
+        
         if isinstance(lhs_type,ArrayType):
             # lhs is array type -> rhs arrType same size & rhs ele same type
             if not isinstance(rhs_type,ArrayType):
@@ -401,7 +407,7 @@ class StaticChecker(BaseVisitor,Utils):
     
     def visitIf(self,ast,c):
         cond_c = {**c,'context': True}
-        cond_type = self.visit(ast.expr,cond_c)
+        cond_type,_ = self.visit(ast.expr,cond_c)
         if not isinstance(cond_type,BoolType):
             raise TypeMismatch(ast) 
         
@@ -414,9 +420,11 @@ class StaticChecker(BaseVisitor,Utils):
     
     def visitForBasic(self,ast,c):
         cond_c = {**c,'context': True}
-        cond_type = self.visit(ast.cond,cond_c)
+        cond_type,_ = self.visit(ast.cond,cond_c)
+        
         if not isinstance(cond_type,BoolType):
             raise TypeMismatch(ast) 
+        
         self.visit(ast.loop,c)  
         
         return c
@@ -427,7 +435,7 @@ class StaticChecker(BaseVisitor,Utils):
 
         init_c = self.visit(ast.init,c) 
 
-        if not isinstance(self.visit(ast.cond,{**init_c,'context': True}),BoolType):
+        if not isinstance(self.visit(ast.cond,{**init_c,'context': True})[0],BoolType):
             raise TypeMismatch(ast)
         
         upda_c = self.visit(ast.upda,init_c)
@@ -446,7 +454,7 @@ class StaticChecker(BaseVisitor,Utils):
         if (ast.value.name == '_'):
             raise TypeMismatch(ast)
         
-        arr_type = self.visit(ast.arr,arr_c) # dimens: List(IntType) eleType: Type
+        arr_type,_ = self.visit(ast.arr,arr_c) # dimens: List(IntType) eleType: Type
         if not isinstance(arr_type,ArrayType):
             raise TypeMismatch(ast)
         
@@ -471,10 +479,11 @@ class StaticChecker(BaseVisitor,Utils):
     def visitReturn(self,ast,c):
         # find the stmt parent function/method --> c['func'] :^)
         func_res = c['func']
+        
         if not func_res:
             raise TypeMismatch(ast) 
         
-        return_type = self.visit(ast.expr,c) if ast.expr else VoidType()
+        return_type = self.visit(ast.expr,{**c,'context': True})[0] if ast.expr else VoidType()
         
         if not type(func_res.mtype.rettype) is type(return_type):
             raise TypeMismatch(ast)
@@ -485,19 +494,21 @@ class StaticChecker(BaseVisitor,Utils):
         # get the type of Array
         context_c = {**c,'context':True}
         
-        arr_type = self.visit(ast.arr,context_c)
+        arr_type,_ = self.visit(ast.arr,context_c)
+        
         if not isinstance(arr_type,ArrayType):
             raise TypeMismatch(ast)
         # check index
         for idx in ast.idx:
             self.visit(idx,context_c)
               
-        return arr_type.eleType
+        return arr_type.eleType, None
     
     def visitFieldAccess(self,ast,c):
         context_c = {**c,'context': True}
         
-        receiver_type = self.visit(ast.receiver,context_c)
+        receiver_type,_ = self.visit(ast.receiver,context_c)
+        
         if not isinstance(receiver_type,StructType):
             raise TypeMismatch
         
@@ -505,7 +516,7 @@ class StaticChecker(BaseVisitor,Utils):
         if not field_res:
             raise TypeMismatch(ast) 
         
-        return field_res.mtype
+        return field_res.mtype, None
     
     def visitFuncCall(self,ast,c):
         #check undeclare function
@@ -514,14 +525,17 @@ class StaticChecker(BaseVisitor,Utils):
             (res for scope in env if (res := self.lookup(ast.funName,scope,lambda x: x.name))),
             None
         )
+        
         if not func_res:
             raise Undeclared(Function(),ast.funName)
         # check if res is a funcdecl
         if not (isinstance(func_res,Symbol) and isinstance(func_res.mtype,MType)):
             raise TypeMismatch(ast)
+        
         func_type = func_res.mtype
+        
         args_c = {**c,'env':c['env'],'context':True}
-        args = list(map(lambda x: self.visit(x,args_c),ast.args))
+        args = list(map(lambda x: self.visit(x,args_c)[0],ast.args))
         # check parameter
         if not len(func_type.partype) == len(ast.args):
             raise TypeMismatch(ast)
@@ -536,12 +550,12 @@ class StaticChecker(BaseVisitor,Utils):
         if c['context']:
             if isinstance(func_type.rettype,VoidType):
                 raise TypeMismatch(ast) 
-            return func_type.rettype  
+            return func_type.rettype, None
      
     def visitMethCall(self,ast,c):
         context_c = {**c,'context': True}
         
-        receiver_type = self.visit(ast.receiver,context_c)
+        receiver_type,_ = self.visit(ast.receiver,context_c)
         if not isinstance(receiver_type,StructType):
             raise TypeMismatch
         
@@ -550,7 +564,7 @@ class StaticChecker(BaseVisitor,Utils):
             raise Undeclared(Method(),ast.metName)
         method_type = method_res.mtype
         
-        args = list(map(lambda x: self.visit(x,context_c),ast.args))
+        args = list(map(lambda x: self.visit(x,context_c)[0],ast.args))
         
         if not len(method_type.partype[1:]) == len(ast.args):
             raise TypeMismatch(ast)
@@ -566,24 +580,25 @@ class StaticChecker(BaseVisitor,Utils):
         if c['context']:
             if isinstance(method_type.rettype,VoidType):
                 raise TypeMismatch(ast) 
-            return method_type.rettype  
+            return method_type.rettype, None
     
     ###VISIT LITERAL###
     def visitIntLiteral(self,ast, c):
-        return IntType()
+        return IntType(), ast.value
     
     def visitFloatLiteral(self,ast, c):
-        return FloatType()
+        return FloatType(), ast.value
 
     def visitStringLiteral(self,ast,c):
-        return StringType()
+        return StringType(), ast.value
     
     def visitBooleanLiteral(self,ast,c):
-        return BoolType()
+        return BoolType(), ast.value
     
     def visitArrayLiteral(self,ast,c):
         dimens_c = {**c,'context': True}
-        dimens = list(map(lambda x: self.visit(x,dimens_c),ast.dimens)) 
+        dimens = list(map(lambda x: self.visit(x,dimens_c)[0],ast.dimens)) 
+        
         if not next(filter(lambda x: isinstance(x,IntType),dimens),None):
             raise TypeMismatch(ast)
         # check if value is really eleType?
@@ -592,7 +607,7 @@ class StaticChecker(BaseVisitor,Utils):
         def ensure_nested(x):
             # base case
             if not isinstance(x,list):
-                val = self.visit(x,c)# visit as it can be expr?
+                val,_ = self.visit(x,{**c,'context': True})# visit as it can be expr?
                 if not type(val) is type(ele_type): # check if val is the same type as eleType
                     raise TypeMismatch(ast)
                 return True
@@ -600,7 +615,7 @@ class StaticChecker(BaseVisitor,Utils):
             return reduce(lambda acc,cur: acc and ensure_nested(cur),x,True) # recursively iterate each val in the list
         ensure_nested(ast.value)
         
-        return ArrayType(ast.dimens, ele_type)
+        return ArrayType(ast.dimens, ele_type), None
     
     def visitStructLiteral(self,ast,c):
         # struct_literal -> name, elements [name, expr]
@@ -611,18 +626,19 @@ class StaticChecker(BaseVisitor,Utils):
         ) # --> name: str, elements [Symbol()],methods: [Symbol()]
         if not struct_type :
             raise Undeclared(StaticError.Type(),ast.name)
+        
         field_c = {**c,'context':True}
         for ele in ast.elements:
             field_res = self.lookup(ele[0], struct_type.elements, lambda x: x.name) 
             if not field_res:
                 raise Undeclared(Field(),ele[0])
-            if not type(self.visit(ele[1],field_c)) is type(field_res.mtype):
+            if not type(self.visit(ele[1],field_c)[0]) is type(field_res.mtype):
                 raise TypeMismatch(ast)
         
-        return struct_type
+        return struct_type, None
 
     def visitNilLiteral(self,ast,c):
-        return VoidType()
+        return VoidType(), None
         
     def visitId(self,ast,c):
         env = c['env']
@@ -636,71 +652,76 @@ class StaticChecker(BaseVisitor,Utils):
             if c['lhs']:
                 return ast.name
             raise Undeclared(Identifier(), ast.name)
+        
         if isinstance(res,(StructType,ArrayType,InterfaceType)):
             return res
-        return res.mtype
+        
+        return res.mtype, res.value
     
+    def check_l_r_val(self,lval,rval):
+        return lval + rval if lval and rval else None
     def visitBinaryOp(self,ast,c):
         expr_c = {**c,'context': True}
-        left_type = self.visit(ast.left,expr_c)
-        right_type = self.visit(ast.right,expr_c) 
+        left_type,left_val = self.visit(ast.left,expr_c)
+        right_type,right_val = self.visit(ast.right,expr_c) 
         ## ARTIHMETIC OPERATOR
         if ast.op == '+':
-            # Both operands are String
-            if isinstance(left_type,StringType) and isinstance(right_type,StringType):
-                return StringType()
-            # Both operands are Int
-            if isinstance(left_type,IntType) and isinstance(right_type,IntType):
-                return IntType()
-            # Both operands are Float
-            if isinstance(left_type,FloatType) and isinstance(right_type,FloatType):
-                return FloatType() 
-            # Either operand is Float and the other is Int
-            if (isinstance(left_type,IntType) and isinstance(right_type,FloatType))\
-                or (isinstance(left_type,FloatType) and isinstance(right_type,IntType)):
-                return FloatType()
-            raise TypeMismatch(ast)
+            add_mapping = {
+                (StringType,StringType): StringType(),
+                (IntType,IntType): IntType(),
+                (FloatType,FloatType): FloatType(),
+                (IntType,FloatType): FloatType(),
+                (FloatType,IntType): FloatType()
+            }
+            res_type = add_mapping.get((type(left_type),type(right_type)),None)
+            if not res_type:
+                raise TypeMismatch(ast)
+            
+            return res_type, self.check_l_r_val(left_val,right_val)
+        
         if ast.op in ['-','*','/']:
-            # Both operands are Int
-            if isinstance(left_type,IntType) and isinstance(right_type,IntType):
-                return IntType()
-            # Both operands are Float
-            if isinstance(left_type,FloatType) and isinstance(right_type,FloatType):
-                return FloatType() 
-            # Either operand is Float and the other is Int
-            if (isinstance(left_type,IntType) and isinstance(right_type,FloatType))\
-                or (isinstance(left_type,FloatType) and isinstance(right_type,IntType)):
-                return FloatType()
-            raise TypeMismatch(ast)
+            not_add_mapping = {
+                (IntType,IntType): IntType(),
+                (IntType,FloatType): FloatType(),
+                (FloatType,IntType): FloatType(),
+                (FloatType,FloatType): FloatType()
+            }
+            res_type = not_add_mapping.get((type(left_type),type(right_type)),None)
+            if not res_type:
+                raise TypeMismatch(ast)
+            
+            return res_type, self.check_l_r_val(left_val,right_val)
+        
         if ast.op in ['%']:
             # Both operands are Int
-            if isinstance(left_type,IntType) and isinstance(right_type,IntType):
-                return IntType()
-            raise TypeMismatch(ast)
+            if not isinstance(left_type,IntType) and isinstance(right_type,IntType):
+                raise TypeMismatch(ast)
+
+            return IntType(), self.check_l_r_val(left_val,right_val)
         ## RELATIONAL OPERATOR
         if ast.op in ['==','!=','<','>','<=','>=']:
             if not isinstance(left_type,(IntType,FloatType,StringType)):
                 raise TypeMismatch(ast)
             if not type(left_type) is type(right_type):
                 raise TypeMismatch(ast)
-            return BoolType()
+            
+            return BoolType(), self.check_l_r_val(left_val,right_val)
         ## BOOLEAN OPERATOR
         if ast.op in ['&&','||']:
             if not (isinstance(left_type,BoolType) and isinstance(right_type,BoolType)):
                 raise TypeMismatch(ast)
-            return BoolType()
-        
+            return BoolType(), self.check_l_r_val(left_val,right_val)
     def visitUnaryOp(self, ast, c):
-        body_type = self.visit(ast.body, {**c, 'context': True})
+        body_type, body_val = self.visit(ast.body, {**c, 'context': True})
         ops = {
             '-': (IntType,FloatType),
             '!': (BoolType,)
         }
         
-        if isinstance(body_type, ops.get(ast.op)):
-            return body_type
-
-        raise TypeMismatch(ast)
+        if not isinstance(body_type, ops.get(ast.op)):
+            raise TypeMismatch(ast)
+        
+        return body_type, body_val
 
     
             
