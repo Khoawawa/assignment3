@@ -600,7 +600,24 @@ func main() {
         CheckSuite.num = load_tcs(self, tcs, CheckSuite.num)
     def test_pg(self):
         tcs = [
-            ("""var b = [5] int{1,2,3,4};const a = 1 * 2 + 1 + 2 + 3 /4;""","")
+            ("""
+             type I interface {
+                Add(x int, y int) S
+             }
+             type S struct {
+                sum int
+             }
+             func (s S) Add(x int, y int) S {
+                sum = x + y
+                return S {sum: sum} 
+             }
+             func main(){
+                var i I = S{}
+                i = S{}
+                var s S =i.Add(1,2)
+             }
+             
+             ""","")
         ]
         load_tcs(self,tcs,600)
 def load_tcs(suite: CheckSuite, tcs, start_num):

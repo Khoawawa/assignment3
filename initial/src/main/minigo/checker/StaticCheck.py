@@ -131,7 +131,29 @@ class StaticChecker(BaseVisitor,Utils):
             if varType is None:
                 varType = initType
                 
-            if not type(varType) is type(initType):
+            elif isinstance(varType,InterfaceType):
+                # rhs can be a struct
+                if not isinstance(initType,StructType):
+                    raise TypeMismatch(ast)
+                # struct must have all interface prototype
+                for prototype in varType.methods:
+                    method_res = self.lookup(prototype.name,initType.methods,lambda x: x.name)
+                    if method_res is None:
+                        raise TypeMismatch(ast)
+                    # prototype,method_res -> Symbol,Symbol
+                    proto_mtype = prototype.mtype
+                    meth_mtype = method_res.mtype
+                    # check if enough parameter    
+                    if not len(meth_mtype.partype) == len(proto_mtype.partype):
+                        raise TypeMismatch(ast)
+                    # check if parameter is of correct type
+                    if not all(map(lambda x: type(x[0].mtype) is type(x[1]),zip(meth_mtype.partype,proto_mtype.partype))):
+                        raise TypeMismatch(ast) 
+                    # check return type
+                    if not type(meth_mtype.rettype) is type(proto_mtype.rettype):
+                        raise TypeMismatch(ast)   
+                     
+            elif not type(varType) is type(initType):
                 raise TypeMismatch(ast)
         
         if len(env) != 1:
@@ -190,17 +212,13 @@ class StaticChecker(BaseVisitor,Utils):
                 
                 if self.lookup(ast.name,struct_type.elements + struct_type.methods,lambda x: x.name):
                     raise Redeclared(Method(), ast.name)
-                
-                par_scope = [c['receiver']]
             else:
                 res = self.lookup(ast.name,env[0],lambda x: x.name)
-                
-                par_scope = []
-            
+        
             par_c = reduce(
                 lambda acc,cur: self.visit(cur,acc),
                 ast.params,
-                {**c,'env': [par_scope] + c['env']}
+                {**c,'env': [[]] + c['env']}
             )
             partypes = par_c['env'][0]
             # check return type
@@ -220,10 +238,10 @@ class StaticChecker(BaseVisitor,Utils):
         if c['receiver']:
             methods = c['receiver'].mtype.methods
             func_res = self.lookup(ast.name,methods,lambda x: x.name)
+            
         else:
             func_res = self.lookup(ast.name,env[0],lambda x: x.name)
             
-        param_list = func_res.mtype.partype
         # visit body block
         self.visit(ast.body,{**c,'env':[func_res.mtype.partype] + c['env'],'func':func_res})
             
@@ -251,6 +269,7 @@ class StaticChecker(BaseVisitor,Utils):
             ast.fun,
             {
                 **c,
+                'env': [[Symbol(ast.receiver,struct_type,None)]] + c['env'],
                 'receiver': Symbol(ast.receiver,struct_type,None)
             }
         )
@@ -387,10 +406,10 @@ class StaticChecker(BaseVisitor,Utils):
                 proto_mtype = prototype.mtype
                 meth_mtype = method_res.mtype
                 # check if enough parameter    
-                if not len(meth_mtype.partype[1:]) == len(proto_mtype.partype):
+                if not len(meth_mtype.partype) == len(proto_mtype.partype):
                     raise TypeMismatch(ast)
                 # check if parameter is of correct type
-                if not all(map(lambda x: type(x[0].mtype) is type(x[1]),zip(meth_mtype.partype[1:],proto_mtype.partype))):
+                if not all(map(lambda x: type(x[0].mtype) is type(x[1]),zip(meth_mtype.partype,proto_mtype.partype))):
                     raise TypeMismatch(ast) 
                 # check return type
                 if not type(meth_mtype.rettype) is type(proto_mtype.rettype):
@@ -510,7 +529,7 @@ class StaticChecker(BaseVisitor,Utils):
         receiver_type,_ = self.visit(ast.receiver,context_c)
         
         if not isinstance(receiver_type,StructType):
-            raise TypeMismatch
+            raise TypeMismatch(ast)
         
         field_res = self.lookup(ast.field,receiver_type.elements,lambda x: x.name) 
         if not field_res:
@@ -556,7 +575,7 @@ class StaticChecker(BaseVisitor,Utils):
         context_c = {**c,'context': True}
         
         receiver_type,_ = self.visit(ast.receiver,context_c)
-        if not isinstance(receiver_type,StructType):
+        if not isinstance(receiver_type,(StructType,InterfaceType)):
             raise TypeMismatch
         
         method_res = self.lookup(ast.metName,receiver_type.methods,lambda x: x.name)
@@ -566,11 +585,14 @@ class StaticChecker(BaseVisitor,Utils):
         
         args = list(map(lambda x: self.visit(x,context_c)[0],ast.args))
         
-        if not len(method_type.partype[1:]) == len(ast.args):
+        if not len(method_type.partype) == len(ast.args):
             raise TypeMismatch(ast)
-        
-        if not all(map(lambda x: type(x[1]) is type(x[0].mtype),zip(method_type.partype[1:],args))):
-            raise TypeMismatch(ast)
+        if isinstance(receiver_type, StructType):
+            if not all(map(lambda x: type(x[1]) is type(x[0].mtype),zip(method_type.partype,args))):
+                raise TypeMismatch(ast)
+        else:
+            if not all(map(lambda x: type(x[1]) is type(x[0]),zip(method_type.partype,args))):
+                raise TypeMismatch(ast)
 
         if not c['context']:
             if not isinstance(method_type.rettype,VoidType):
