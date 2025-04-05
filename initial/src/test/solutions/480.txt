@@ -1,1 +1,1 @@
-Redeclared Prototype: foo
+Type Mismatch: MethodDecl(c,Id(a),FuncDecl(minh,[ParDecl(x,StringType)],VoidType,Block([VarDecl(n,StringType,StringLiteral(test_1))])))

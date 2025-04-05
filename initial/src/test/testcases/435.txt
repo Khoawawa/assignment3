@@ -1,7 +1,1 @@
-
-              var a int;
-              var b float;
-              func main(){
-                a = b;
-              }
-              
+Program([FuncDecl(test,[],StringType,Block([Return(StringLiteral(minh))])),FuncDecl(main,[],VoidType,Block([VarDecl(a,StringType,FuncCall(test,[]))]))])

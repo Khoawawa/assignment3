@@ -1,6 +1,1 @@
-
-                type I interface{
-                    foo(x int) int
-                    foo(y int) int
-                }
-                
+Program([InterfaceType(a,[Prototype(minh,[IntType],VoidType)]),MethodDecl(c,Id(a),FuncDecl(minh,[ParDecl(x,StringType)],VoidType,Block([VarDecl(n,StringType,StringLiteral(test_1))])))])

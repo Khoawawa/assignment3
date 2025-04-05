@@ -1,1 +1,1 @@
-var a float; func main(){a = 2;};
+Program([FuncDecl(test,[ParDecl(a,StringType)],VoidType,Block([VarDecl(a,IntType,IntLiteral(1))])),FuncDecl(main,[],VoidType,Block([FuncCall(test,[IntLiteral(1)])]))])

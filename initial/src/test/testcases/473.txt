@@ -1,1 +1,1 @@
-func main(){if (10 + 5) {a=1;};};
+Program([StructType(minh,[(a,StringType)],[]),MethodDecl(c,Id(minh),FuncDecl(main,[],VoidType,Block([VarDecl(x,StringType,FieldAccess(Id(c),a))])))])

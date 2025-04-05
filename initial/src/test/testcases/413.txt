@@ -1,1 +1,1 @@
-var a int; func main(){a = 1;};
+Program([VarDecl(a,IntType),FuncDecl(main,[],VoidType,Block([VarDecl(a,IntType),VarDecl(a,IntType)]))])

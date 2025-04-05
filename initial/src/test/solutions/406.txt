@@ -1,1 +1,1 @@
-Type Mismatch: ArrayLiteral([IntLiteral(2),IntLiteral(3)],FloatType,[[FloatLiteral(1.1),FloatLiteral(2.2),FloatLiteral(3.3)],[IntLiteral(4),FloatLiteral(5.5),FloatLiteral(6.6)]])
+Type Mismatch: ArrayType(IntType,[StringLiteral(Minh)])

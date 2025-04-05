@@ -68,7 +68,8 @@ class StaticChecker(BaseVisitor,Utils):
             'lhs': False,
             'func': None,
             'receiver': None,
-            'pass': 0
+            'pass': 0,
+            'is_loop': False
         }
         # Step 0: collect name except for method decl
         global_c = reduce(
@@ -94,18 +95,19 @@ class StaticChecker(BaseVisitor,Utils):
             filter(lambda x: not isinstance(x,(StructType,InterfaceType)),ast.decl),
             {**global_c,'pass': 3}
                             )
-        #Step 4: check main function existence
-        res = self.lookup("main",program_c['env'][-1],lambda x: x.name)
-        if not res:
-            raise Undeclared(Function(), "main")
-        if not isinstance(res,Symbol) and not isinstance(res.mtype,MType):
-            raise Undeclared(Function(), "main")
+        # #Step 4: check main function existence
+        # res = self.lookup("main",program_c['env'][-1],lambda x: x.name)
+        # if not res:
+        #     raise Undeclared(Function(), "main")
+        # if not isinstance(res,Symbol) and not isinstance(res.mtype,MType):
+        #     raise Undeclared(Function(), "main")
         
     def visitBlock(self,ast,c):
         new_c = {
             **c,
-            'env': [[]] + c['env'],
-            'context': False
+            'env': ([[]] + c['env']) if not c['is_loop'] else c['env'],
+            'context': False,
+            'is_loop': False,
         }
         reduce(lambda acc,ele: self.visit(ele,acc), ast.member,new_c)
     
@@ -152,7 +154,25 @@ class StaticChecker(BaseVisitor,Utils):
                     # check return type
                     if not type(meth_mtype.rettype) is type(proto_mtype.rettype):
                         raise TypeMismatch(ast)   
-                     
+                    
+            elif isinstance(varType,ArrayType):
+                # lhs is array type -> rhs arrType same size & rhs ele same type
+                if not isinstance(varType,ArrayType):
+                    raise TypeMismatch(ast)
+                
+                if isinstance(varType.eleType,IntType) and not (isinstance(initType.eleType,IntType) or isinstance(initType.eleType,FloatType)):
+                    raise TypeMismatch(ast)
+                
+                if len(varType.dimens) != len(initType.dimens):
+                    raise TypeMismatch(ast)
+                
+                for lhs_dimen, rhs_dimen in zip(varType.dimens,initType.dimens):
+                    if lhs_dimen != rhs_dimen:
+                        raise TypeMismatch(ast)
+            elif isinstance(varType,FloatType) and isinstance(initType,(IntType,FloatType)):
+            # case where lhs is float and rhs is int or float
+                pass
+                 
             elif not type(varType) is type(initType):
                 raise TypeMismatch(ast)
         
@@ -303,7 +323,7 @@ class StaticChecker(BaseVisitor,Utils):
         # for checking use reduce then comprehension
         struct_env = []
         for ele in fields:
-            if self.lookup(ele,struct_env,lambda x : x[0]):
+            if self.lookup(ele[0],struct_env,lambda x : x.name):
                 raise Redeclared(Field(),ele[0])
             struct_env.append(
                 Symbol(ele[0],self.visit(ele[1],c),None)
@@ -361,7 +381,7 @@ class StaticChecker(BaseVisitor,Utils):
         prototype = Symbol(ast.name,MType(param_type,rettype))
         
         return {**c, 'env': [env[0] + [prototype]] + env[1:]}
-        
+    
     def visitAssign(self,ast,c):
         lhs_type = self.visit(ast.lhs,{**c, 'lhs': True})
         if isinstance(lhs_type,VoidType):
@@ -393,7 +413,7 @@ class StaticChecker(BaseVisitor,Utils):
                 if lhs_dimen != rhs_dimen:
                     raise TypeMismatch(ast)
                 
-        if isinstance(lhs_type,InterfaceType):
+        elif isinstance(lhs_type,InterfaceType):
             # rhs can be a struct
             if not isinstance(rhs_type,StructType):
                 raise TypeMismatch(ast)
@@ -452,12 +472,14 @@ class StaticChecker(BaseVisitor,Utils):
         if not isinstance(ast.init,(VarDecl,Assign)):
             raise TypeMismatch(ast)
 
-        init_c = self.visit(ast.init,c) 
+        init_c = self.visit(ast.init,{**c,'env': [[]] + c['env']}) 
 
         if not isinstance(self.visit(ast.cond,{**init_c,'context': True})[0],BoolType):
             raise TypeMismatch(ast)
         
         upda_c = self.visit(ast.upda,init_c)
+        
+        upda_c['is_loop'] = True
         
         self.visit(ast.loop,upda_c) 
         
@@ -465,15 +487,20 @@ class StaticChecker(BaseVisitor,Utils):
     
     def visitForEach(self,ast,c):
         # idx: Id, value: Id, arr: Expr, loop: Block
-        arr_c = {
-            **c, 
-            'context': True
-        }
+        
         
         if (ast.value.name == '_'):
             raise TypeMismatch(ast)
         
+        if (ast.idx.name == ast.value.name):
+            raise TypeMismatch(ast)
+        
+        arr_c = {
+            **c, 
+            'context': True
+        }
         arr_type,_ = self.visit(ast.arr,arr_c) # dimens: List(IntType) eleType: Type
+        
         if not isinstance(arr_type,ArrayType):
             raise TypeMismatch(ast)
         
@@ -483,7 +510,8 @@ class StaticChecker(BaseVisitor,Utils):
         
         loop_c = {
             **c,
-            'env': [idx_type + val_type] + c['env']
+            'env': [idx_type + val_type] + c['env'],
+            'is_loop': True,
         }
         
         self.visit(ast.loop,loop_c)
@@ -533,7 +561,7 @@ class StaticChecker(BaseVisitor,Utils):
         
         field_res = self.lookup(ast.field,receiver_type.elements,lambda x: x.name) 
         if not field_res:
-            raise TypeMismatch(ast) 
+            raise Undeclared(Field(),ast.field)
         
         return field_res.mtype, None
     
@@ -576,7 +604,7 @@ class StaticChecker(BaseVisitor,Utils):
         
         receiver_type,_ = self.visit(ast.receiver,context_c)
         if not isinstance(receiver_type,(StructType,InterfaceType)):
-            raise TypeMismatch
+            raise TypeMismatch(ast)
         
         method_res = self.lookup(ast.metName,receiver_type.methods,lambda x: x.name)
         if not method_res:

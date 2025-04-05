@@ -1,1 +1,1 @@
-Undeclared Function: b
+Type Mismatch: Assign(Id(x),StructLiteral(minh_imple,[]))

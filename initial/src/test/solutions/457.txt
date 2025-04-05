@@ -1,0 +1,1 @@
+Type Mismatch: For(Assign(Id(i),IntLiteral(1)),BinaryOp(Id(i),+,IntLiteral(2)),Assign(Id(i),BinaryOp(Id(i),+,IntLiteral(1))),Block([VarDecl(x,IntType,Id(i))]))

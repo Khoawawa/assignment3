@@ -1,1 +1,1 @@
-func a(a int,a int){return;};
+Program([InterfaceType(a,[Prototype(minh,[IntType],VoidType)]),MethodDecl(c,Id(a),FuncDecl(minh,[ParDecl(x,IntType)],VoidType,Block([VarDecl(n,StringType,StringLiteral(test_1))]))),VarDecl(a,BoolType,BooleanLiteral(true))])

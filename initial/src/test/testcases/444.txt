@@ -1,9 +1,1 @@
-
-                func a() boolean {return true;}
-                func main(){
-                    var a int
-                    for a() {
-                        a = 1
-                    }
-                }
-                
+Program([FuncDecl(main,[ParDecl(x,IntType)],VoidType,Block([VarDecl(x,IntType),Assign(Id(x),BinaryOp(IntLiteral(2),/,IntLiteral(2))),VarDecl(x,IntType)]))])

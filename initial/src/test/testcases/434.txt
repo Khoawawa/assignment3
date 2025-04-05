@@ -1,3 +1,1 @@
-
-                var a int = 1.2;
-                
+Program([FuncDecl(test,[],VoidType,Block([Return()])),FuncDecl(main,[],VoidType,Block([FuncCall(test,[])]))])

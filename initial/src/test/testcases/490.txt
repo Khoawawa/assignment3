@@ -1,1 +1,1 @@
-func main(){x:= 1;};
+Program([InterfaceType(a,[Prototype(minh,[IntType],VoidType)]),MethodDecl(c,Id(a),FuncDecl(minh,[ParDecl(x,IntType),ParDecl(y,IntType)],VoidType,Block([VarDecl(n,StringType,StringLiteral(test_1))]))),FuncDecl(main,[],VoidType,Block([VarDecl(k,Id(a)),MethodCall(Id(k),minh,[IntLiteral(1)])]))])

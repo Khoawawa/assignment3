@@ -1,5 +1,1 @@
-type A struct{
-                a int;
-                };
-                var a = A{b:1};
-            
+Program([FuncDecl(test,[],IntType,Block([VarDecl(a,FloatType,FloatLiteral(1.2)),Assign(Id(x),IntLiteral(1)),Return(Id(x))])),FuncDecl(main,[],VoidType,Block([Assign(Id(x),BinaryOp(FloatLiteral(1.2),/,IntLiteral(2)))]))])

@@ -1,8 +1,1 @@
-
-                func main(){
-                    for index,value := range [5] int {1,2,3,4,5} {
-                    b = 1
-                }
-                }
-                
-                
+Program([FuncDecl(main,[],VoidType,Block([VarDecl(x,IntType),If(BinaryOp(IntLiteral(2),==,IntLiteral(2)),Block([VarDecl(x,IntType,IntLiteral(1)),FuncCall(test,[])]))]))])

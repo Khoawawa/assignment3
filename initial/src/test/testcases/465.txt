@@ -1,1 +1,1 @@
-func main(){if (true){if (true) {a=1;} else {b=2;};} else {c=3;};};
+Program([VarDecl(minh,IntType,IntLiteral(1)),StructType(minh,[(a,StringType)],[])])

@@ -1,1 +1,0 @@
-Type Mismatch: ForEach(Id(_),Id(_),ArrayLiteral([IntLiteral(5)],IntType,[IntLiteral(1),IntLiteral(2),IntLiteral(3),IntLiteral(4),IntLiteral(5)]),Block([Assign(Id(b),IntLiteral(1))]))

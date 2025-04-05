@@ -1,1 +1,1 @@
-var a float; func main(){if (a) {a=1;};};
+Program([StructType(minh,[(a,StringType)],[]),MethodDecl(c,Id(minh),FuncDecl(test,[],VoidType,Block([VarDecl(x,StringType,FieldAccess(Id(c),a))]))),FuncDecl(main,[],VoidType,Block([VarDecl(x,Id(minh),StructLiteral(minh,[(a,StringLiteral(name))]))]))])

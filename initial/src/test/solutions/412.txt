@@ -1,1 +1,0 @@
-Type Mismatch: Assign(ArrayCell(Id(arr),[IntLiteral(1)]),IntLiteral(10))

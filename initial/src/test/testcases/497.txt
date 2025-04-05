@@ -1,12 +1,1 @@
-
-                type S struct{
-                    i int;
-                }
-                func (s S) foo(x int) int{
-                    return x + s.foo(x);
-                }
-                func main(){
-                    var s S;
-                    var a int = s.foo(10);
-                }
-                
+Program([InterfaceType(minh,[Prototype(a,[IntType],VoidType),Prototype(b,[IntType],VoidType)]),StructType(minh_imple,[],[]),MethodDecl(c,Id(minh_imple),FuncDecl(a,[ParDecl(x,IntType)],VoidType,Block([VarDecl(k,IntType,Id(x))]))),MethodDecl(c,Id(minh_imple),FuncDecl(b,[ParDecl(x,IntType)],VoidType,Block([VarDecl(k,IntType,Id(x))]))),FuncDecl(main,[],VoidType,Block([VarDecl(x,Id(minh)),Assign(Id(x),StructLiteral(minh_imple,[]))]))])

@@ -1,1 +1,1 @@
-type a struct {a int;};var a int;
+Program([StructType(minh,[(a,StringType)],[]),MethodDecl(c,Id(minh),FuncDecl(test,[],VoidType,Block([VarDecl(x,StringType,FieldAccess(Id(c),a))]))),FuncDecl(main,[],VoidType,Block([VarDecl(x,Id(minh),StructLiteral(minh_1,[(a,StringLiteral(name))]))]))])

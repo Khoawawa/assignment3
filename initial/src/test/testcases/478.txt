@@ -1,1 +1,1 @@
-var a int; func main(){if (!a) {b=1;};};
+Program([StructType(minh,[(a,StringType)],[]),MethodDecl(c,Id(minh),FuncDecl(test,[],VoidType,Block([VarDecl(x,StringType,FieldAccess(Id(c),a))]))),FuncDecl(main,[],VoidType,Block([VarDecl(x,Id(minh),StructLiteral(minh,[(a,StringLiteral(name))])),MethodCall(Id(x),test_undeclared,[])]))])

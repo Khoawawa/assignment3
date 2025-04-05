@@ -1,1 +1,1 @@
-Type Mismatch: VarDecl(i,Id(I),StructLiteral(S,[(i,IntLiteral(1))]))
+Type Mismatch: MethodDecl(c,Id(a),FuncDecl(minh,[ParDecl(x,IntType)],VoidType,Block([VarDecl(n,StringType,StringLiteral(test_1))])))

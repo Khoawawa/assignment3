@@ -1,1 +1,1 @@
-var a int; func main(){if (a) {a=1;};};
+Program([StructType(minh,[(a,StringType)],[]),MethodDecl(c,Id(minh),FuncDecl(main,[ParDecl(c,StringType)],VoidType,Block([VarDecl(x,StringType,FieldAccess(Id(c),a))])))])

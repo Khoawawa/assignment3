@@ -1,1 +1,1 @@
-Type Mismatch: BinaryOp(IntLiteral(1),+,StringLiteral("Hello"))
+Type Mismatch: ArrayLiteral([IntLiteral(1),IntLiteral(2)],IntType,[[StringLiteral(minh)],[IntLiteral(2)]])

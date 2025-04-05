@@ -1,1 +1,1 @@
-var a[5]int; func main(){a[1] = 2;};
+Program([VarDecl(a,ArrayType(IntType,[IntLiteral(1)]),ArrayLiteral([StringLiteral(minh)],IntType,[IntLiteral(1)]))])

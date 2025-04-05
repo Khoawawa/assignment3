@@ -1,1 +1,1 @@
-type A struct {a int;}; var arr [2]int = A{a:10};
+Program([InterfaceType(minh,[Prototype(a,[IntType],VoidType),Prototype(b,[IntType],VoidType)]),StructType(minh_imple,[],[]),MethodDecl(c,Id(minh_imple),FuncDecl(a,[ParDecl(x,IntType)],VoidType,Block([VarDecl(k,IntType,Id(x))]))),FuncDecl(main,[],VoidType,Block([VarDecl(x,Id(minh),StructLiteral(minh_imple,[]))]))])

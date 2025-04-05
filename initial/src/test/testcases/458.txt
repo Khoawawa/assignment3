@@ -1,8 +1,1 @@
-
-                func doSomething() {
-                    return;
-                }
-                func main() {
-                    var x int = 1 + doSomething();
-                }
-                
+Program([FuncDecl(main,[],IntType,Block([VarDecl(x,IntType,IntLiteral(1)),For(Assign(Id(i),IntLiteral(1)),BinaryOp(Id(i),<=,IntLiteral(2)),Assign(Id(a),BinaryOp(Id(i),+,IntLiteral(1))),Block([VarDecl(x,IntType,Id(i))])),Return(Id(x))]))])

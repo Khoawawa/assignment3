@@ -1,1 +1,1 @@
-func main(){if (true) {a=1;};};
+Program([StructType(minh,[(a,StringType),(a,IntType)],[])])

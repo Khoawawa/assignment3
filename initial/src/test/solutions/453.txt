@@ -1,0 +1,1 @@
+Type Mismatch: For(BinaryOp(IntLiteral(2),/,IntLiteral(2)),Block([VarDecl(x,StringType,StringLiteral(minh))]))

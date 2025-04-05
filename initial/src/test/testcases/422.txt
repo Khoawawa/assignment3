@@ -1,1 +1,1 @@
-var a float; func main(){b := a / 2;};
+Program([VarDecl(a,FloatType,BinaryOp(IntLiteral(1),+,IntLiteral(2)))])

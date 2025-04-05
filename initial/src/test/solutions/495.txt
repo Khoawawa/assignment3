@@ -1,1 +1,1 @@
-Type Mismatch: Assign(FieldAccess(Id(a),arr),IntLiteral(100))
+Type Mismatch: VarDecl(x,Id(minh),StructLiteral(minh_imple,[]))

@@ -1,1 +1,1 @@
-var a[5]int = [5]int{1,2,3,4,5}; func main(){a[1] = 2;};
+Program([ConstDecl(a,IntLiteral(10)),ConstDecl(b,IntLiteral(10))])

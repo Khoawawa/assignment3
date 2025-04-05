@@ -1,1 +1,1 @@
-type A struct {a int;}; func main(){var arr [2]int = A{a:10};};
+Program([FuncDecl(main,[],VoidType,Block([VarDecl(a,IntType)]))])

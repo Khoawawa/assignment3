@@ -1,1 +1,1 @@
-Type Mismatch: MethodCall(Id(s),foo,[IntLiteral(10),IntLiteral(20)])
+Type Mismatch: Assign(Id(x),StructLiteral(minh_imple,[]))

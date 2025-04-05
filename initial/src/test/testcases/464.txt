@@ -1,1 +1,1 @@
-func main(){if (false) {a=1;} else {a=2;};};
+Program([FuncDecl(main,[ParDecl(x,StringType),ParDecl(x,IntType)],VoidType,Block([VarDecl(x,IntType)]))])

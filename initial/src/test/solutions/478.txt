@@ -1,1 +1,1 @@
-Type Mismatch: UnaryOp(!,Id(a))
+Undeclared Method: test_undeclared

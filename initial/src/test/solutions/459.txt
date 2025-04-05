@@ -1,1 +1,1 @@
-Type Mismatch: FuncCall(a,[IntLiteral(3)])
+Type Mismatch: Assign(Id(i),BinaryOp(Id(i),>=,IntLiteral(1)))

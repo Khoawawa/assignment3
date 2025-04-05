@@ -1,1 +1,1 @@
-func main(){if (1.2) {a=1;};};
+Program([FuncDecl(main,[],VoidType,Block([VarDecl(x,IntType)])),VarDecl(main,IntType,IntLiteral(1))])

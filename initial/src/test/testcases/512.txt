@@ -1,0 +1,1 @@
+Program([FuncDecl(main,[],VoidType,Block([VarDecl(idx,IntType),VarDecl(value,IntType),VarDecl(arr,StringType),ForEach(Id(idx),Id(value),Id(arr),Block([VarDecl(minh,IntType)]))]))])

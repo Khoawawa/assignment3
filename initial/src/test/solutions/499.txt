@@ -1,1 +1,1 @@
-Type Mismatch: MethodCall(Id(s),foo,[IntLiteral(10)])
+Type Mismatch: VarDecl(k,IntType,Id(x))

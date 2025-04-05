@@ -1,1 +1,1 @@
-Redeclared Type: a
+Type Mismatch: MethodDecl(c,Id(a),FuncDecl(minh,[ParDecl(x,IntType)],IntType,Block([VarDecl(n,StringType,StringLiteral(test_1))])))

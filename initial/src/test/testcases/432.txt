@@ -1,9 +1,1 @@
-
-             func add(x int, y int) int{
-                return x + y;
-             }
-             func main(){
-                var a int;
-                a = add(1,2); 
-             }
-             
+Program([VarDecl(a,ArrayType(IntType,[IntLiteral(1),IntLiteral(2)]),ArrayLiteral([IntLiteral(1),IntLiteral(2)],IntType,[[IntLiteral(1)],[IntLiteral(2)]])),VarDecl(b,ArrayType(IntType,[IntLiteral(2)]),ArrayCell(Id(a),[IntLiteral(1)]))])

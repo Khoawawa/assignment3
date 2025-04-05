@@ -1,1 +1,1 @@
-Redeclared Variable: a
+Undeclared Type: minh_1

@@ -1,1 +1,1 @@
-func main(){if (1) {a=1;};};
+Program([VarDecl(minh,IntType,IntLiteral(1)),InterfaceType(a,[Prototype(minh,[IntType],VoidType)])])

@@ -1,5 +1,1 @@
-type A struct { arr int; }; 
-func main() {
-    var a A;
-    a.arr = 100;
-}
+Program([InterfaceType(minh,[Prototype(a,[IntType],VoidType),Prototype(b,[IntType],VoidType)]),StructType(minh_imple,[],[]),MethodDecl(c,Id(minh_imple),FuncDecl(a,[ParDecl(x,IntType)],VoidType,Block([VarDecl(k,IntType,Id(x))]))),MethodDecl(c,Id(minh_imple),FuncDecl(b,[ParDecl(x,IntType)],IntType,Block([VarDecl(k,IntType,Id(x))]))),FuncDecl(main,[],VoidType,Block([VarDecl(x,IntType,IntLiteral(1)),MethodCall(Id(x),a,[IntLiteral(1)])]))])

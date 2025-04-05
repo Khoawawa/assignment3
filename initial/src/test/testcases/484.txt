@@ -1,14 +1,1 @@
-
-                func foo() int {
-                    return 1
-                }
-                func (s S) foo(x int) int{
-                    return x
-                }
-                type S struct {
-                    a int
-                }
-                func main(){
-                    var s S
-                }
-                
+Program([InterfaceType(a,[Prototype(minh,[IntType],IntType)]),MethodDecl(c,Id(a),FuncDecl(minh,[ParDecl(x,IntType)],IntType,Block([VarDecl(n,StringType,StringLiteral(test_1))]))),FuncDecl(main,[],VoidType,Block([VarDecl(k,Id(a)),MethodCall(Id(k),minh,[IntLiteral(1)])]))])

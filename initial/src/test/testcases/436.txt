@@ -1,7 +1,1 @@
-
-            
-            func main(){
-                var a int;
-                a = 10 + 5 * 3 / 2    
-            }
-            
+Program([FuncDecl(test,[],StringType,Block([Return(StringLiteral(minh))])),FuncDecl(main,[],VoidType,Block([FuncCall(test,[])]))])

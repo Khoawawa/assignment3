@@ -1,8 +1,1 @@
-
-                func a(x int, y int) int{
-                    return x + y
-                }
-                func main(){
-                    a(3.2)
-                }
-                
+Program([FuncDecl(main,[],IntType,Block([VarDecl(x,IntType,IntLiteral(1)),For(Assign(Id(i),IntLiteral(1)),BinaryOp(Id(i),<=,IntLiteral(2)),Assign(Id(i),BinaryOp(Id(i),+,IntLiteral(1))),Block([VarDecl(i,StringType,StringLiteral(minh))])),Return(IntLiteral(1))]))])

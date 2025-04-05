@@ -1,1 +1,1 @@
-var a boolean; func main(){a = 1;};
+Program([FuncDecl(test,[ParDecl(a,StringType),ParDecl(b,IntType)],VoidType,Block([VarDecl(a,IntType,IntLiteral(1))])),FuncDecl(main,[],VoidType,Block([FuncCall(test,[IntLiteral(1)])]))])

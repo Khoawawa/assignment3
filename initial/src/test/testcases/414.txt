@@ -1,1 +1,1 @@
-var a int = 1.2;
+Program([VarDecl(a,IntType),FuncDecl(main,[],VoidType,Block([VarDecl(a,IntType,Id(b))]))])
